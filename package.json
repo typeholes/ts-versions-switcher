@@ -4,7 +4,8 @@
   "displayName": "TS Versions Switcher",
   "description": "Easily switch TypeScript versions",
   "icon": "ts_switcher.png",
-  "version": "0.0.1",
+  "repository": "https://github.com/typeholes/ts-versions-switcher",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.79.0"
   },
