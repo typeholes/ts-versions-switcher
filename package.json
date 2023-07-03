@@ -5,7 +5,7 @@
   "description": "Easily switch TypeScript versions",
   "icon": "ts_switcher.png",
   "repository": "https://github.com/typeholes/ts-versions-switcher",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.79.0"
   },
@@ -20,6 +20,14 @@
       {
         "command": "ts-versions-switcher.switch",
         "title": "Switch TS Version"
+      },
+      {
+        "command": "ts-versions-switch.set-workspace-version",
+        "title": "Switch TS Version - set workspace tsdk"
+      },
+      {
+        "command": "ts-versions-switch.set-global-version",
+        "title": "Switch TS Version - set global tsdk"
       }
     ]
   },
