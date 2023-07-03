@@ -20,7 +20,9 @@ export function activate(context: vscode.ExtensionContext) {
   let disposable = vscode.commands.registerCommand(
     'ts-versions-switcher.switch',
     () => {
-
+      const vscodeNext = vscode.extensions.getExtension(
+        'ms-vscode.vscode-typescript-next'
+      );
 
       const extPath = vscode.extensions.getExtension(
         'typeholes.ts-versions-switcher'
@@ -60,9 +62,18 @@ export function activate(context: vscode.ExtensionContext) {
           ?.isFile()
       );
 
+      if (vscodeNext) {
+        tsDirs.unshift(
+          'Nightly:' +
+            path.join(vscodeNext.extensionPath, 'node_modules', 'typescript')
+        );
+      }
+
       vscode.window.showQuickPick(tsDirs).then((option) => {
         if (option) {
-          const toPath = path.join(projectPath, 'node_modules', option);
+          const toPath = option.startsWith('Nightly:')
+            ? option.slice(8)
+            : path.join(projectPath, 'node_modules', option);
           const fromPath = path.join(extPath, 'typescript');
 
           if (fs.statSync(fromPath, { throwIfNoEntry: false })) {
@@ -76,9 +87,7 @@ export function activate(context: vscode.ExtensionContext) {
               console.log('Symlink created');
               console.log(
                 'Symlink is a directory:',
-                fs
-                  .statSync('symlinkToDir', { throwIfNoEntry: false })
-                  ?.isDirectory()
+                fs.statSync(toPath, { throwIfNoEntry: false })?.isDirectory()
               );
 
               vscode.commands.executeCommand('typescript.restartTsServer');
