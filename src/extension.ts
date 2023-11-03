@@ -54,7 +54,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   fs.mkdirSync(path.join(storagePath, 'node_modules'), { recursive: true });
 
-  vscode.window.createTerminal({ cwd: storagePath });
+  vscode.commands.registerCommand('ts-versions-switch.open-terminal', () => {
+    vscode.window.createTerminal({ cwd: storagePath });
+  });
 
   vscode.commands.registerCommand(
     'ts-versions-switch.set-global-version',
