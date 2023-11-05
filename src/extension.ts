@@ -7,6 +7,7 @@ import path = require('path');
 
 import { exec as _exec } from 'child_process';
 import { promisify } from 'util';
+import { everyTsswitchTo } from './everyTs';
 
 const exec = promisify(require('node:child_process').exec);
 
@@ -16,7 +17,7 @@ async function installTsVersion(storagePath: string, version: string) {
   try {
     const { stdout, _stderr } = await exec(
       `npm install '${version}@npm:typescript@${version}'`,
-      { cwd: storagePath }
+      { cwd: storagePath },
     );
     tsVersions.push(version);
     vscode.window.showInformationMessage(stdout);
@@ -24,7 +25,7 @@ async function installTsVersion(storagePath: string, version: string) {
     vscode.window.showErrorMessage(
       typeof e === 'object' && e && 'message' in e
         ? (e.message as string)
-        : `${e}`
+        : `${e}`,
     );
   }
 }
@@ -33,14 +34,14 @@ async function getTsVersions(storagePath: string) {
   try {
     const { stdout, _stderr } = await exec(
       "npm show 'typescript@*' versions --json",
-      { cwd: storagePath }
+      { cwd: storagePath },
     );
     tsVersions = JSON.parse(stdout).reverse();
   } catch (e) {
     vscode.window.showErrorMessage(
       typeof e === 'object' && e && 'message' in e
         ? (e.message as string)
-        : `${e}`
+        : `${e}`,
     );
   }
 }
@@ -54,6 +55,11 @@ export function activate(context: vscode.ExtensionContext) {
 
   fs.mkdirSync(path.join(storagePath, 'node_modules'), { recursive: true });
 
+  vscode.commands.registerCommand(
+    'ts-versions-switch.every-ts-switch',
+    everyTsswitchTo,
+  );
+
   vscode.commands.registerCommand('ts-versions-switch.open-terminal', () => {
     vscode.window.createTerminal({ cwd: storagePath });
   });
@@ -66,9 +72,9 @@ export function activate(context: vscode.ExtensionContext) {
         .update(
           'typescript.tsdk',
           path.join(storagePath, 'typescript', 'lib'),
-          vscode.ConfigurationTarget.Global
+          vscode.ConfigurationTarget.Global,
         );
-    }
+    },
   );
 
   vscode.commands.registerCommand(
@@ -79,38 +85,41 @@ export function activate(context: vscode.ExtensionContext) {
         .update(
           'typescript.tsdk',
           path.join(storagePath, 'typescript', 'lib'),
-          vscode.ConfigurationTarget.Workspace
+          vscode.ConfigurationTarget.Workspace,
         );
-    }
+    },
   );
 
   let disposable = vscode.commands.registerCommand(
     'ts-versions-switcher.switch',
     async () => {
       const files = fs.readdirSync(path.join(storagePath, 'node_modules'));
-      const dirs = files.filter((dir) =>
-        fs
-          .statSync(path.join(storagePath, 'node_modules', dir), {
-            throwIfNoEntry: false,
-          })
-          ?.isDirectory()
-      );
-      const binDirs = dirs.filter((dir) =>
-        fs
-          .statSync(path.join(storagePath, 'node_modules', dir, 'bin'), {
-            throwIfNoEntry: false,
-          })
-          ?.isDirectory()
-      );
-      const installed = binDirs.filter((dir) =>
-        fs
-          .statSync(
-            path.join(storagePath, 'node_modules', dir, 'bin', 'tsserver'),
-            {
+      const dirs = files.filter(
+        (dir) =>
+          fs
+            .statSync(path.join(storagePath, 'node_modules', dir), {
               throwIfNoEntry: false,
-            }
-          )
-          ?.isFile()
+            })
+            ?.isDirectory(),
+      );
+      const binDirs = dirs.filter(
+        (dir) =>
+          fs
+            .statSync(path.join(storagePath, 'node_modules', dir, 'bin'), {
+              throwIfNoEntry: false,
+            })
+            ?.isDirectory(),
+      );
+      const installed = binDirs.filter(
+        (dir) =>
+          fs
+            .statSync(
+              path.join(storagePath, 'node_modules', dir, 'bin', 'tsserver'),
+              {
+                throwIfNoEntry: false,
+              },
+            )
+            ?.isFile(),
       );
 
       await getTsVersions(storagePath);
@@ -122,10 +131,16 @@ export function activate(context: vscode.ExtensionContext) {
         .slice(0, 50)
         .map((v) => `Install: ${v}`);
 
+      versions.unshift('every-ts.current');
+
       vscode.window
         .showQuickPick([latestDev, ...installed, ...versions])
         .then(async (option) => {
           if (option) {
+            if (option === 'every-ts.current') {
+              vscode.commands.executeCommand('typescript.restartTsServer');
+            }
+
             if (option.startsWith('Install:')) {
               option = option.slice(9);
               await installTsVersion(storagePath, option);
@@ -145,7 +160,7 @@ export function activate(context: vscode.ExtensionContext) {
                 console.log('Symlink created');
                 console.log(
                   'Symlink is a directory:',
-                  fs.statSync(toPath, { throwIfNoEntry: false })?.isDirectory()
+                  fs.statSync(toPath, { throwIfNoEntry: false })?.isDirectory(),
                 );
 
                 vscode.commands.executeCommand('typescript.restartTsServer');
@@ -153,7 +168,7 @@ export function activate(context: vscode.ExtensionContext) {
             });
           }
         });
-    }
+    },
   );
 
   context.subscriptions.push(disposable);

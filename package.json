@@ -32,6 +32,10 @@
       {
         "command": "ts-versions-switch.open-terminal",
         "title": "Switch TS Version - open terminal"
+      },
+      {
+        "command": "ts-versions-switch.every-ts-switch",
+        "title": "Switch TS Version - every-ts switch"
       }
     ]
   },
